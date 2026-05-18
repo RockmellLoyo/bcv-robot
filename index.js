@@ -55,7 +55,7 @@ async function obtenerTasasBCV() {
             const ampm = hora >= 12 ? 'pm' : 'am';
             hora = hora % 12;
             hora = hora ? hora : 12;
-            const fechaLegible = fechaHoyCorta + ' ' + hora + ':' + minutes + ' ' + ampm;
+            const fechaLegible = fechaHoyCorta + ' ' + hora + ':' + minutos + ' ' + ampm;
             
             const tasaDolar = Math.round(usd * 100) / 100;
             const tasaEuro = Math.round((eur || (usd * 1.18)) * 100) / 100;
