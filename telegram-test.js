@@ -1,5 +1,5 @@
 async function probarTelegramDirecto() {
-const url = "https://api.telegram.org/bot8819201042:aahmQbrjyBxYwmhd6qECdP92VM0BYsmi96e/sendMessage";
+const url = "https://api.telegram.org/bot8819201042:AAHMqBRJYbXyWMHD6QecDp92vm0bySMI96E/sendMessage";
 const paquete = {
 chat_id: "5844630655",
 text: "?? TEST DIRECTO: Si lees esto, el puente de Telegram está 100% ACTIVO y el token es correcto.",
