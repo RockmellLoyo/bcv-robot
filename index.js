@@ -10,12 +10,11 @@ const agent = new https.Agent({ rejectUnauthorized: false });
 async function enviarTelegram(mensaje) {
     const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
     try {
-        const r = await fetch(url, {
+        await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: mensaje, parse_mode: "Markdown" })
         });
-        console.log("-> Respuesta Telegram Status:", r.status);
     } catch (e) {
         console.error("Error Telegram: " + e.message);
     }
@@ -30,19 +29,14 @@ async function obtenerTasasBCV() {
         const anio = ahora.getFullYear();
         const fechaHoyCorta = dia + '/' + mes + '/' + anio;
 
-        console.log("-> Fecha de hoy calculada por el robot:", fechaHoyCorta);
-
         const checkResp = await fetch(FIREBASE_URL + '/DATA_TASAS/fecha_corta.json', { agent });
         const ultimaFechaGuardada = await checkResp.json();
 
-        console.log("-> Fecha que leyó desde Firebase:", ultimaFechaGuardada);
-
         if (ultimaFechaGuardada === fechaHoyCorta) {
-            console.log("-> Candado activado: Ya se actualizó hoy. Abortando.");
+            console.log("Ya se actualizo hoy. Abortando.");
             process.exit(0);
         }
 
-        console.log("-> Conectando con la página del BCV...");
         const response = await fetch('https://www.bcv.org.ve', { agent });
         const html = await response.text();
         const $ = cheerio.load(html);
@@ -55,8 +49,6 @@ async function obtenerTasasBCV() {
             if (texto === 'EUR') eur = parseFloat(valor);
         });
         
-        console.log("-> Tasa capturada de la web del BCV - USD:", usd, "EUR:", eur);
-        
         if (usd && usd > 0) {
             let hora = ahora.getHours();
             const minutos = String(ahora.getMinutes()).padStart(2, '0');
@@ -68,22 +60,17 @@ async function obtenerTasasBCV() {
             const tasaDolar = Math.round(usd * 100) / 100;
             const tasaEuro = Math.round((eur || (usd * 1.18)) * 100) / 100;
             
-            console.log("-> Guardando datos en Firebase...");
-            const fbResp = await fetch(FIREBASE_URL + '/DATA_TASAS.json', {
+            await fetch(FIREBASE_URL + '/DATA_TASAS.json', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ tasa_dolar: tasaDolar, tasa_euro: tasaEuro, fecha: fechaLegible, fecha_corta: fechaHoyCorta })
             });
-            console.log("-> Respuesta Firebase Status:", fbResp.status);
 
-            const reporte = `*?? ROCKMELL SYSTEM CLOUD*\n\n?? *Tasa BCV Sincronizada*\n?? *USD:* ${tasaDolar} Bs.\n\n?? _Fecha:_ ${fechaLegible}`;
-            console.log("-> Enviando reporte a Telegram...");
+            const reporte = `*?? ROCKMELL SYSTEM CLOUD*\n\n? *Tasa BCV Sincronizada*\n?? *USD:* ${tasaDolar} Bs.\n\n?? _Fecha:_ ${fechaLegible}`;
             await enviarTelegram(reporte);
-        } else {
-            console.log("-> Alerta: No se pudo extraer la tasa USD del HTML del BCV.");
-        }
+        } 
     } catch(e) {
-        console.error("Error en el proceso general: " + e.message);
+        console.error("Error: " + e.message);
     }
 }
 
