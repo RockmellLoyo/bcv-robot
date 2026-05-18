@@ -2,7 +2,7 @@ name: Servidor Automatizado BCV
 
 on:
   schedule:
-    - cron: '0 12-20 * * 1-5'
+    - cron: '*/10 21-23,0-3 * * 2-6'
   workflow_dispatch:
 
 env:
