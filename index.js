@@ -63,7 +63,7 @@ async function obtenerTasasBCV() {
                 })
             });
 
-            await enviarTelegram("*ROCKMELL SYSTEM CLOUD*\n\n*ACTUALIZACION DEL BCV*\n*BCV : Bs. - * " + tasaDolar + "\n *EURO : Bs -* " + tasaEuro);
+            `await enviarTelegram("*ROCKMELL SYSTEM CLOUD*\n\n*ACTUALIZACION DEL BCV*\n*BCV : Bs. " + tasaDolar + "*\n*EURO : Bs. " + tasaEuro + "*");`
         }
     } catch(e) {
         console.error("Error: " + e.message);
