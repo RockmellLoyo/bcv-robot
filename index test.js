@@ -17,9 +17,6 @@ async function enviarTelegram(mensaje) {
 
 async function obtenerTasasBCV() {
   try {
-    // Capturamos el número de disparo que le enviamos desde GitHub (por defecto 1)
-    const numeroDisparo = process.env.NUMERO_DISPARO || "1";
-
     const ahora = new Date();
     ahora.setHours(ahora.getHours() - 4);
     const dia = String(ahora.getDate()).padStart(2, '0');
@@ -47,8 +44,8 @@ async function obtenerTasasBCV() {
       const fechaLegible = fechaHoyCorta + " " + hora + ":" + minutes + " " + ampm;
       const tasaDolar = Math.round(usd * 100) / 100;
 
-      // Reporte limpio directo a tu Telegram sin tocar Firebase
-      const reporte = `*?? BOMBA DE TIEMPO (TEST)*\n\n?? *Disparo:* ${numeroDisparo} de 3\n?? *USD:* ${tasaDolar} Bs.\n\n? _Sincronización manual sin Firebase exitosa_`;
+      // Mensaje directo y forzado
+      const reporte = `*?? BOMBA DE TIEMPO (TEST)*\n\n?? *Robot activo en la nube*\n?? *USD:* ${tasaDolar} Bs.\n\n? _Sincronización manual forzada exitosa_`;
       await enviarTelegram(reporte);
     }
   } catch (e) {
