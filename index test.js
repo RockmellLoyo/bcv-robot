@@ -24,7 +24,15 @@ async function obtenerTasasBCV() {
     const anio = ahora.getFullYear();
     const fechaHoyCorta = dia + "/" + mes + "/" + anio;
 
-    const response = await fetch("https://www.bcv.org.ve/");
+    console.log("Conectando al BCV con límite de 15 segundos...");
+    
+    // Creamos el freno de mano por tiempo (Timeout)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos maximo
+
+    const response = await fetch("https://www.bcv.org.ve/", { signal: controller.signal });
+    clearTimeout(timeoutId); // Si responde a tiempo, quitamos el freno
+
     const html = await response.text();
     const $ = cheerio.load(html);
     let usd = null;
@@ -44,12 +52,18 @@ async function obtenerTasasBCV() {
       const fechaLegible = fechaHoyCorta + " " + hora + ":" + minutes + " " + ampm;
       const tasaDolar = Math.round(usd * 100) / 100;
 
-      // Mensaje directo y forzado
       const reporte = `*?? BOMBA DE TIEMPO (TEST)*\n\n?? *Robot activo en la nube*\n?? *USD:* ${tasaDolar} Bs.\n\n? _Sincronización manual forzada exitosa_`;
       await enviarTelegram(reporte);
+    } else {
+      console.log("No se pudieron extraer las tasas del HTML.");
     }
   } catch (e) {
-    console.error("Error: " + e.message);
+    if (e.name === 'AbortError') {
+      console.error("? ERROR: El BCV tardó demasiado en responder (Timeout). Servidor bloqueado.");
+      await enviarTelegram("?? *ALERTA TEST:* El BCV tiene la IP bloqueada o está caído en la nube (Timeout de 15s).");
+    } else {
+      console.error("Error: " + e.message);
+    }
   }
 }
 
