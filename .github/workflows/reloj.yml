@@ -14,5 +14,4 @@ jobs:
       - name: Instalar Librerias
         run: npm install cheerio
       - name: Ejecutar Robot
-        run: node --no-warnings index-forzado.js
-        run: node --no-warnings index-forzado.js
+        run: node --no-warnings "index test.js"
