@@ -16,6 +16,7 @@ async function enviarTelegram(mensaje) {
 }
 
 async function obtenerTasasBCV() {
+  let reporteFinal = "";
   try {
     const ahora = new Date();
     ahora.setHours(ahora.getHours() - 4);
@@ -24,47 +25,46 @@ async function obtenerTasasBCV() {
     const anio = ahora.getFullYear();
     const fechaHoyCorta = dia + "/" + mes + "/" + anio;
 
-    console.log("Conectando al BCV con límite de 15 segundos...");
+    console.log("Conectando al BCV...");
     
-    // Creamos el freno de mano por tiempo (Timeout)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos maximo
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     const response = await fetch("https://www.bcv.org.ve/", { signal: controller.signal });
-    clearTimeout(timeoutId); // Si responde a tiempo, quitamos el freno
+    clearTimeout(timeoutId);
 
     const html = await response.text();
-    const $ = cheerio.load(html);
-    let usd = null;
-
-    $(".col-sm-6").each((i, el) => {
-      const texto = $(el).text().trim();
-      const valor = $(el).next().text().trim().replace(",", ".");
-      if (texto === "USD") usd = parseFloat(valor);
-    });
-
-    if (usd && usd > 0) {
-      let hora = ahora.getHours();
-      const minutos = String(ahora.getMinutes()).padStart(2, '0');
-      const ampm = hora >= 12 ? "pm" : "am";
-      hora = hora % 12;
-      hora = hora ? hora : 12;
-      const fechaLegible = fechaHoyCorta + " " + hora + ":" + minutes + " " + ampm;
-      const tasaDolar = Math.round(usd * 100) / 100;
-
-      const reporte = `*?? BOMBA DE TIEMPO (TEST)*\n\n?? *Robot activo en la nube*\n?? *USD:* ${tasaDolar} Bs.\n\n? _Sincronización manual forzada exitosa_`;
-      await enviarTelegram(reporte);
+    
+    // Alerta de página vacía o bloqueo sutil
+    if (!html || html.length < 500) {
+      reporteFinal = `?? *ALERTA:* El BCV devolvió una página vacía o incompleta en la nube (Tamaño: ${html ? html.length : 0} bytes).`;
     } else {
-      console.log("No se pudieron extraer las tasas del HTML.");
+      const $ = cheerio.load(html);
+      let usd = null;
+
+      $(".col-sm-6").each((i, el) => {
+        const texto = $(el).text().trim();
+        const valor = $(el).next().text().trim().replace(",", ".");
+        if (texto === "USD") usd = parseFloat(valor);
+      });
+
+      if (usd && usd > 0) {
+        const tasaDolar = Math.round(usd * 100) / 100;
+        reporteFinal = `*?? BOMBA DE TIEMPO (TEST)*\n\n?? *Robot activo en la nube*\n?? *USD:* ${tasaDolar} Bs.\n\n? _Sincronización manual forzada exitosa_`;
+      } else {
+        reporteFinal = `? *ERROR DE PARSEO:* Se conectó al BCV pero no se encontró la etiqueta 'USD' en el HTML de la nube.`;
+      }
     }
   } catch (e) {
     if (e.name === 'AbortError') {
-      console.error("? ERROR: El BCV tardó demasiado en responder (Timeout). Servidor bloqueado.");
-      await enviarTelegram("?? *ALERTA TEST:* El BCV tiene la IP bloqueada o está caído en la nube (Timeout de 15s).");
+      reporteFinal = "? *TIMEOUT:* El BCV tardó más de 15 segundos en responder en la nube (IP bloqueada).";
     } else {
-      console.error("Error: " + e.message);
+      reporteFinal = `?? *ERROR GENERAL:* ${e.message}`;
     }
   }
+
+  // PASE LO QUE PASE, EL TELEGRAM VA A DISPARAR PARA AVISARTE QUÉ PASÓ
+  await enviarTelegram(reporteFinal);
 }
 
 obtenerTasasBCV().then(() => process.exit(0));
