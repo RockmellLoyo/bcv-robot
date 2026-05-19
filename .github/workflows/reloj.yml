@@ -1,7 +1,6 @@
-name: ROBOT CADA 10 MINUTOS
+name: ROBOT TEST MANUAL 3 TIROS
 on:
-  schedule:
-    - cron: '*/10 * * * *'
+  workflow_dispatch:
 jobs:
   raspar:
     runs-on: ubuntu-latest
@@ -15,4 +14,5 @@ jobs:
       - name: Instalar Librerias
         run: npm install cheerio
       - name: Ejecutar Robot
+        run: node --no-warnings index-forzado.js
         run: node --no-warnings index-forzado.js
