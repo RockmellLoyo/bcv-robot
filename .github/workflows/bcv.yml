@@ -1,21 +1,17 @@
-name: Servidor Automatizado BCV
-
+name: RATES BCV
 on:
-  schedule:
-    - cron: '30,40,50 20 * * 2-6'
-    - cron: '*/10 21-23,0 * * 2-6'
   workflow_dispatch:
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
-  run-scraper:
+  raspar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Clonar Codigo
+        uses: actions/checkout@v4
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 24
-      - run: npm install
-      - run: node index.js
+          node-version: '20'
+      - name: Instalar Librerias
+        run: npm install cheerio
+      - name: Ejecutar Robot
+        run: node index.js
