@@ -1,6 +1,11 @@
 name: ROBOT TEST MANUAL 3 TIROS
 on:
   workflow_dispatch:
+    inputs:
+      disparo:
+        description: 'Escribe el número de disparo (1, 2 o 3)'
+        required: true
+        default: '1'
 jobs:
   raspar:
     runs-on: ubuntu-latest
@@ -14,4 +19,6 @@ jobs:
       - name: Instalar Librerias
         run: npm install cheerio
       - name: Ejecutar Robot
+        env:
+          NUMERO_DISPARO: ${{ github.event.inputs.disparo }}
         run: node --no-warnings "index test.js"
