@@ -2,16 +2,12 @@ name: ROBOT TEST MANUAL 3 TIROS
 on:
   workflow_dispatch:
 jobs:
-  raspar:
+  run-scraper:
     runs-on: ubuntu-latest
     steps:
-      - name: Clonar Codigo
-        uses: actions/checkout@v4
-      - name: Instalar Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '24'
-      - name: Instalar Librerias
-        run: npm install cheerio
-      - name: Ejecutar Robot
-        run: node --no-warnings "index test.js"
+          node-version: 24
+      - run: npm install node-fetch cheerio
+      - run: node --no-warnings "index test.js"
