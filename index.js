@@ -1,4 +1,4 @@
-const cheerio = require("cheerio");
+import * as cheerio from 'cheerio';
 const FIREBASE_URL = "https://control-data-rockmell-default-rtdb.firebaseio.com";
 const TELEGRAM_TOKEN = "8819201042:AAHMqBRJYbXyWMHD6QecDp92vm0bySMI96E";
 const TELEGRAM_CHAT_ID = "5844630655";

@@ -10,8 +10,8 @@ jobs:
       - name: Instalar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
       - name: Instalar Librerias
         run: npm install cheerio
       - name: Ejecutar Robot
-        run: node index.js
+        run: node --no-warnings index.js
