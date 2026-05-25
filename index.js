@@ -3,7 +3,7 @@ import * as cheerio from 'cheerio';
 import https from 'https';
 
 const FIREBASE_URL = "https://control-data-rockmell-default-rtdb.firebaseio.com";
-const TELEGRAM_TOKEN = "8819201042:AAHMqBRJYbXyWMHD6QecDp92vm0bySMI96E";
+const TELEGRAM_TOKEN = "8988193869:AAERkp3hk_xNFKrXciM7XV6lfQAT-iHogdc";
 const TELEGRAM_CHAT_ID = "5844630655";
 const agent = new https.Agent({ rejectUnauthorized: false });
 
