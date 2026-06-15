@@ -22,7 +22,7 @@ async function enviarTelegram(mensaje) {
 
 async function obtenerTasasBCV() {
     try {
-        const checkResp = await fetch(FIREBASE_URL + '/DATA_TASAS.json', { agent });
+        const checkResp = await fetch(FIREBASE_URL + '/RATES.json', { agent });
         const datosFirebase = await checkResp.json();
         const tasaAnterior = datosFirebase ? parseFloat(datosFirebase.tasa_dolar) : 0;
 
@@ -53,7 +53,7 @@ async function obtenerTasasBCV() {
             const anio = ahora.getFullYear();
             const fechaLegible = `${dia}/${mes}/${anio} ${ahora.toLocaleTimeString('es-VE')}`;
 
-            await fetch(FIREBASE_URL + '/DATA_TASAS.json', {
+            await fetch(FIREBASE_URL + '/RATES.json', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
