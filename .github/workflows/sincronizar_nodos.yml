@@ -2,7 +2,7 @@ name: SINCRONIZAR TASAS
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 2 * * 2-6' # 10 PM hora Venezuela
+    - cron: '0 2 * * 1-5'
 
 jobs:
   sync:
