@@ -1,15 +1,14 @@
 name: PRUEBA 12PM
 on:
   schedule:
-    - cron: '0 16 * * *'
+    - cron: '05 16 * * *'
   workflow_dispatch:
 
 jobs:
   test_sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Ejecutar script de prueba
+      - name: Ejecutar sincronizacion automatica
         run: |
           curl -X GET "https://rockmell-system-default-rtdb.firebaseio.com/RATES.json" > rates.json
-          # Extraer valores y enviarlos a DATA_TASAS
           curl -X PUT "https://rockmell-system-default-rtdb.firebaseio.com/DATA_TASAS.json" -d @rates.json
