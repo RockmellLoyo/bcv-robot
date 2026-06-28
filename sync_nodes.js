@@ -37,7 +37,7 @@ async function sincronizarYNotificar() {
             body: JSON.stringify(rates)
         });
 
-        await enviarTelegram("*ROCKMELL SYSTEM CLOUD*\n\n*ACTUALIZACION DE TASAS DE TRABAJO*\n*TASA BCV : Bs. " + rates.tasa_dolar + "*\n*TASA EURO : Bs. " + rates.tasa_euro + "*");
+        await enviarTelegram("*ACTUALIZADO DATA TASAS*\n\n*TASA BCV : Bs. " + rates.tasa_dolar + "*\n*TASA EURO : Bs. " + rates.tasa_euro + "*");
 
     } catch(e) {
         console.error("Error: " + e.message);
