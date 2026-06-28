@@ -1,7 +1,7 @@
 name: PRUEBA 12PM
 on:
   schedule:
-    - cron: '05 16 * * *'
+    - cron: '20 16 * * *'
   workflow_dispatch:
 
 jobs:
