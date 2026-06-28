@@ -1,35 +1,47 @@
 import fetch from 'node-fetch';
 import https from 'https';
 
-const FIREBASE_URL = "https://control-data-rockmell-default-rtdb.firebaseio.com";
+const FIREBASE_URL = "https://rockmell-system-default-rtdb.firebaseio.com";
+const TELEGRAM_TOKEN = "8988193869:AAERkp3hk_xNFKrXciM7XV6lfQAT-iHogdc";
+const TELEGRAM_CHAT_ID = "5844630655";
 const agent = new https.Agent({ rejectUnauthorized: false });
 
-async function syncNodos() {
+async function enviarTelegram(mensaje) {
+    const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
     try {
-        // 1. Obtener datos del nodo origen
-        const response = await fetch(FIREBASE_URL + '/RATES.json', { agent });
-        const data = await response.json();
-
-        // 2. Preparar fecha formateada
-        const ahora = new Date();
-        ahora.setHours(ahora.getHours() - 4);
-        const fechaLegible = ahora.toLocaleString('es-VE');
-
-        // 3. Escribir en el nodo destino
-        await fetch(FIREBASE_URL + '/DATA_TASAS.json', {
-            method: 'PUT',
+        await fetch(url, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                tasa_dolar: data.tasa_dolar, 
-                tasa_euro: data.tasa_euro, 
-                fecha: fechaLegible 
-            })
+            body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: mensaje, parse_mode: "Markdown" })
         });
-        
-        console.log("Sincronización completada exitosamente.");
-    } catch(e) {
-        console.error("Error al sincronizar: " + e.message);
+    } catch (e) {
+        console.error("Error Telegram: " + e.message);
     }
 }
 
-syncNodos();
+async function sincronizarYNotificar() {
+    try {
+        const respRates = await fetch(FIREBASE_URL + '/RATES.json', { agent });
+        const rates = await respRates.json();
+        
+        const respDataTasas = await fetch(FIREBASE_URL + '/DATA_TASAS.json', { agent });
+        const dataTasas = await respDataTasas.json();
+
+        if (rates && dataTasas && rates.tasa_dolar === dataTasas.tasa_dolar) {
+            process.exit(0);
+        }
+
+        await fetch(FIREBASE_URL + '/DATA_TASAS.json', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(rates)
+        });
+
+        await enviarTelegram("*ROCKMELL SYSTEM CLOUD*\n\n*ACTUALIZACION DE TASAS DE TRABAJO*\n*TASA BCV : Bs. " + rates.tasa_dolar + "*\n*TASA EURO : Bs. " + rates.tasa_euro + "*");
+
+    } catch(e) {
+        console.error("Error: " + e.message);
+    }
+}
+
+sincronizarYNotificar();
