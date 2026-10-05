@@ -9,24 +9,12 @@ const agent = new https.Agent({ rejectUnauthorized: false });
 
 const accion = process.argv[2] || 'update';
 
-function ahoraVET() {
-    const d = new Date();
-    return new Date(d.getTime() - (4 * 60 * 60 * 1000));
-}
-
 function fechaFormateada(d) {
     const dia = String(d.getDate()).padStart(2, '0');
     const mes = String(d.getMonth() + 1).padStart(2, '0');
     const anio = d.getFullYear();
     const hora = d.toLocaleTimeString('es-VE', {hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true});
     return `${dia}/${mes}/${anio} ${hora.toLowerCase()}`;
-}
-
-function soloFecha(d) {
-    const dia = String(d.getDate()).padStart(2, '0');
-    const mes = String(d.getMonth() + 1).padStart(2, '0');
-    const anio = d.getFullYear();
-    return `${dia}/${mes}/${anio}`;
 }
 
 async function firebaseGet(path) {
@@ -80,34 +68,44 @@ async function rasparBCV() {
     }
 }
 
+async function leerRates() {
+    const rates = await firebaseGet('RATES');
+    if (!rates || !rates.tasa_dolar) return null;
+    return {
+        usd: parseFloat(rates.tasa_dolar),
+        eur: rates.tasa_euro ? parseFloat(rates.tasa_euro) : null
+    };
+}
+
 async function ejecutarUpdate() {
-    const ahora = ahoraVET();
-    const hoyStr = soloFecha(ahora);
-
-    const last = await firebaseGet('TASAS/LAST');
-
-    if (last && last.fecha) {
-        const fechaLast = last.fecha.split(' ')[0];
-        if (fechaLast === hoyStr) {
-            console.log('LAST ya es de hoy. No se toca.');
-            return true;
-        }
-    }
-
     const bcv = await rasparBCV();
     if (!bcv) {
         console.log('No se pudo raspar BCV.');
         return false;
     }
 
-    const lastUSD = last && last.tasa_dolar ? parseFloat(last.tasa_dolar) : null;
-
-    if (lastUSD !== null && Math.abs(lastUSD - bcv.usd) < 0.001) {
-        console.log('BCV sin cambios. No se actualiza LAST.');
-        return true;
+    const rates = await leerRates();
+    if (!rates) {
+        console.log('No se pudo leer RATES.');
+        return false;
     }
 
-    const fechaTasa = fechaFormateada(ahora);
+    if (Math.abs(bcv.usd - rates.usd) < 0.001) {
+        console.log('BCV sin cambios vs RATES. No hay nada nuevo.');
+        return false;
+    }
+
+    const last = await firebaseGet('TASAS/LAST');
+
+    if (last && last.tasa_dolar) {
+        const lastUSD = parseFloat(last.tasa_dolar);
+        if (Math.abs(lastUSD - bcv.usd) < 0.001) {
+            console.log('LAST ya tiene la tasa nueva. No se toca.');
+            return false;
+        }
+    }
+
+    const fechaTasa = fechaFormateada(new Date());
 
     await firebasePut('TASAS/LAST', {
         fecha: fechaTasa,
@@ -126,20 +124,11 @@ async function ejecutarUpdate() {
 }
 
 async function ejecutarNewDay() {
-    const ahora = ahoraVET();
-    const hoyStr = soloFecha(ahora);
-
     const last = await firebaseGet('TASAS/LAST');
 
     if (!last || !last.tasa_dolar) {
         console.log('No hay LAST pendiente. No se rota.');
-        return true;
-    }
-
-    const fechaLast = last.fecha.split(' ')[0];
-    if (fechaLast === hoyStr) {
-        console.log('LAST es de hoy. No se rota.');
-        return true;
+        return false;
     }
 
     const on = await firebaseGet('TASAS/ON');
