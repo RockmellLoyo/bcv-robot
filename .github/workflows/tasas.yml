@@ -1,0 +1,30 @@
+name: TASAS MANUAL
+
+on:
+  workflow_dispatch:
+    inputs:
+      accion:
+        description: 'Accion a ejecutar'
+        required: true
+        default: 'update'
+        type: choice
+        options:
+          - update
+          - newday
+
+jobs:
+  ejecutar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar Codigo
+        uses: actions/checkout@v4
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Instalar Librerias
+        run: |
+          npm install cheerio
+          npm install node-fetch@2
+      - name: Ejecutar Accion
+        run: node --no-warnings tasas.js ${{ github.event.inputs.accion }}
