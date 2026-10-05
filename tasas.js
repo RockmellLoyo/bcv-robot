@@ -9,6 +9,11 @@ const agent = new https.Agent({ rejectUnauthorized: false });
 
 const accion = process.argv[2] || 'update';
 
+function ahoraVET() {
+    const d = new Date();
+    return new Date(d.getTime() - (4 * 60 * 60 * 1000));
+}
+
 function fechaFormateada(d) {
     const dia = String(d.getDate()).padStart(2, '0');
     const mes = String(d.getMonth() + 1).padStart(2, '0');
@@ -76,7 +81,6 @@ async function rasparBCV() {
 }
 
 async function ejecutarUpdate() {
-    const ahora = new Date();
     const bcv = await rasparBCV();
     if (!bcv) {
         console.log('No se pudo raspar BCV.');
@@ -91,7 +95,9 @@ async function ejecutarUpdate() {
         return;
     }
 
-    const fechaTasa = fechaFormateada(new Date());
+    const ahora = ahoraVET();
+    const fechaTasa = fechaFormateada(ahora);
+
     await firebasePut('TASAS/LAST', {
         fecha: fechaTasa,
         tasa_dolar: bcv.usd,
@@ -108,7 +114,7 @@ async function ejecutarUpdate() {
 }
 
 async function ejecutarNewDay() {
-    const ahora = new Date();
+    const ahora = ahoraVET();
     const hoyStr = soloFecha(ahora);
 
     const last = await firebaseGet('TASAS/LAST');
