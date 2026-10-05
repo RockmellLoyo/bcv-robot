@@ -81,21 +81,32 @@ async function rasparBCV() {
 }
 
 async function ejecutarUpdate() {
+    const ahora = ahoraVET();
+    const hoyStr = soloFecha(ahora);
+
+    const last = await firebaseGet('TASAS/LAST');
+
+    if (last && last.fecha) {
+        const fechaLast = last.fecha.split(' ')[0];
+        if (fechaLast === hoyStr) {
+            console.log('LAST ya es de hoy. No se toca.');
+            return true;
+        }
+    }
+
     const bcv = await rasparBCV();
     if (!bcv) {
         console.log('No se pudo raspar BCV.');
-        return;
+        return false;
     }
 
-    const last = await firebaseGet('TASAS/LAST');
     const lastUSD = last && last.tasa_dolar ? parseFloat(last.tasa_dolar) : null;
 
     if (lastUSD !== null && Math.abs(lastUSD - bcv.usd) < 0.001) {
         console.log('BCV sin cambios. No se actualiza LAST.');
-        return;
+        return true;
     }
 
-    const ahora = ahoraVET();
     const fechaTasa = fechaFormateada(ahora);
 
     await firebasePut('TASAS/LAST', {
@@ -109,8 +120,9 @@ async function ejecutarUpdate() {
         await firebaseDelete('TASAS/OLD');
     }
 
-    await enviarTelegram(`<b>- ULTIMA TASA PUBLICADA (GITHUB) -</b>\n<b>DOLAR : ${bcv.usd.toFixed(2)} Bs</b>\n<b>EURO : ${bcv.eur.toFixed(2)} Bs</b>\n<b>${fechaTasa}</b>`);
+    await enviarTelegram(`<b>- ULTIMA TASA PUBLICADA -</b>\n<b>DOLAR : ${bcv.usd.toFixed(2)} Bs</b>\n<b>EURO : ${bcv.eur.toFixed(2)} Bs</b>\n<b>${fechaTasa}</b>`);
     console.log('Update aplicado: ' + bcv.usd);
+    return true;
 }
 
 async function ejecutarNewDay() {
@@ -118,15 +130,16 @@ async function ejecutarNewDay() {
     const hoyStr = soloFecha(ahora);
 
     const last = await firebaseGet('TASAS/LAST');
+
     if (!last || !last.tasa_dolar) {
         console.log('No hay LAST pendiente. No se rota.');
-        return;
+        return true;
     }
 
     const fechaLast = last.fecha.split(' ')[0];
     if (fechaLast === hoyStr) {
         console.log('LAST es de hoy. No se rota.');
-        return;
+        return true;
     }
 
     const on = await firebaseGet('TASAS/ON');
@@ -146,8 +159,9 @@ async function ejecutarNewDay() {
 
     await firebaseDelete('TASAS/LAST');
 
-    await enviarTelegram(`<b>- CAMBIO DE DIA (GITHUB) -</b>\n<b>TASA ON : ${last.tasa_dolar.toFixed(2)} Bs</b>\n<b>Fecha : ${last.fecha}</b>`);
+    await enviarTelegram(`<b>- CAMBIO DE DIA -</b>\n<b>TASA ON : ${last.tasa_dolar.toFixed(2)} Bs</b>\n<b>Fecha : ${last.fecha}</b>`);
     console.log('Rotacion aplicada: ' + last.tasa_dolar);
+    return true;
 }
 
 async function main() {
