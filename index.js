@@ -64,8 +64,8 @@ async function obtenerTasasBCV() {
         const eur = matchEUR ? limpiarNumeroBCV(matchEUR[0]) : 0;
 
         if (usd > 0) {
-            const tasaDolar = usd;
-            const tasaEuro = eur > 0 ? eur : (usd * 1.18);
+            const tasaDolar = parseFloat(usd.toFixed(2));
+            const tasaEuro = eur > 0 ? parseFloat(eur.toFixed(2)) : parseFloat((usd * 1.18).toFixed(2));
 
             if (tasaDolar === tasaAnterior) {
                 process.exit(0);
