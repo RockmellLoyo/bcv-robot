@@ -20,6 +20,12 @@ async function enviarTelegram(mensaje) {
     }
 }
 
+function limpiarNumeroBCV(texto) {
+    if (!texto) return 0;
+    const limpio = texto.replace(/\./g, '').replace(',', '.');
+    return parseFloat(limpio) || 0;
+}
+
 async function obtenerTasasBCV() {
     try {
         const checkResp = await fetch(FIREBASE_URL + '/RATES.json', { agent });
@@ -33,14 +39,15 @@ async function obtenerTasasBCV() {
 
         $('.col-sm-6').each((i, el) => {
             const texto = $(el).text().trim();
-            const valor = $(el).next().text().trim().replace(',', '.');
-            if (texto === 'USD') usd = parseFloat(valor);
-            if (texto === 'EUR') eur = parseFloat(valor);
+            const textoValor = $(el).next().text().trim();
+            
+            if (texto === 'USD') usd = limpiarNumeroBCV(textoValor);
+            if (texto === 'EUR') eur = limpiarNumeroBCV(textoValor);
         });
 
         if (usd && usd > 0) {
-            const tasaDolar = Math.round(usd * 100) / 100;
-            const tasaEuro = Math.round((eur || (usd * 1.18)) * 100) / 100;
+            const tasaDolar = usd;
+            const tasaEuro = eur || (usd * 1.18);
 
             if (tasaDolar === tasaAnterior) {
                 process.exit(0);
@@ -63,7 +70,7 @@ async function obtenerTasasBCV() {
                 })
             });
 
-            `await enviarTelegram("*ROCKMELL SYSTEM CLOUD*\n\n*ACTUALIZACION DEL BCV*\n*TASA BCV : Bs. " + tasaDolar + "*\n*TASA EURO : Bs. " + tasaEuro + "*");`
+            await enviarTelegram("*ROCKMELL SYSTEM CLOUD*\n\n*ACTUALIZACION DEL BCV*\n*TASA BCV : Bs. " + tasaDolar + "*\n*TASA EURO : Bs. " + tasaEuro + "*");
         }
     } catch(e) {
         console.error("Error: " + e.message);
