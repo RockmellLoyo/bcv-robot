@@ -32,22 +32,40 @@ async function obtenerTasasBCV() {
         const datosFirebase = await checkResp.json();
         const tasaAnterior = datosFirebase ? parseFloat(datosFirebase.tasa_dolar) : 0;
 
-        const response = await fetch('https://www.bcv.org.ve', { agent });
+        const response = await fetch('https://www.bcv.org.ve', { 
+            agent,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            }
+        });
         const html = await response.text();
         const $ = cheerio.load(html);
-        let usd = null, eur = null;
+        
+        let textoDolar = "";
+        let textoEuro = "";
 
-        $('.col-sm-6').each((i, el) => {
-            const texto = $(el).text().trim();
-            const textoValor = $(el).next().text().trim();
-            
-            if (texto === 'USD') usd = limpiarNumeroBCV(textoValor);
-            if (texto === 'EUR') eur = limpiarNumeroBCV(textoValor);
-        });
+        $('#dolar').each((i, el) => { textoDolar = $(el).text(); });
+        $('#euro').each((i, el) => { textoEuro = $(el).text(); });
 
-        if (usd && usd > 0) {
+        if (!textoDolar || !textoEuro) {
+            $('.col-sm-6').each((i, el) => {
+                const texto = $(el).text().trim();
+                if (texto === 'USD') textoDolar = $(el).next().text();
+                if (texto === 'EUR') textoEuro = $(el).next().text();
+            });
+        }
+
+        const regexTasa = /(\d{1,3}(?:\.\d{3})*,\d+|\d+,\d+|\d+\.\d+)/;
+        
+        const matchUSD = textoDolar.match(regexTasa);
+        const matchEUR = textoEuro.match(regexTasa);
+
+        const usd = matchUSD ? limpiarNumeroBCV(matchUSD[0]) : 0;
+        const eur = matchEUR ? limpiarNumeroBCV(matchEUR[0]) : 0;
+
+        if (usd > 0) {
             const tasaDolar = usd;
-            const tasaEuro = eur || (usd * 1.18);
+            const tasaEuro = eur > 0 ? eur : (usd * 1.18);
 
             if (tasaDolar === tasaAnterior) {
                 process.exit(0);
